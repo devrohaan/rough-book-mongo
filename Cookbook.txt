@@ -1,0 +1,635 @@
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4
+
+echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/4.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.0.list
+
+sudo apt-get update
+
+sudo apt-get install -y mongodb-org
+
+sudo service mongod start
+
+sudo service mongod --auth start
+
+#Verify that the mongod process has started successfully by checking the contents of the log file at /var/log/mongodb/mongod.log for a line reading
+
+sudo service mongod stop
+sudo service mongod restart
+
+# to start the mongo shell
+
+mongo --host 127.0.0.1:27017
+
+
+#download the dataset: https://www.w3resource.com/mongodb-exercises/https://www.w3resource.com/mongodb-exercises/
+
+#Run below command from the directory which contains retaurants.json
+
+mongoimport --db hotels_test --collection hotels --file retaurants.json
+
+mongoexport -u=rdbagwe -p=rdbagwe123 --db hotels_test --collection hotels --out exported.json
+
+by default: db used is test
+
+
+
+show dbs
+
+show collections
+
+use dbname
+
+#to check which db is currenlty used
+db
+
+# to drop database
+
+use <database_name>
+
+then 
+
+db.dropDatabase()
+
+# to drop collection
+
+use database
+
+db.collectionname.drop()
+
+
+
+db.hotels.find()
+db.hotels.find().limit(20)
+db.hotels.find().pretty()
+
+Pymongo:
+
+pip install pymongo
+
+
+from pprint import pprint
+import pandas as pd
+
+
+
+=====
+use admin
+db.createUser(
+	  {
+	    user: "rdbagwe",
+	    pwd: "rdbagwe123",
+	    roles: [ { role: "userAdminAnyDatabase", db: "admin" } ]
+	  }
+	)
+
+# go to config file
+
+nano /etc/mongod.conf
+
+# add below parameter 
+
+security:
+    authorization: "enabled"
+
+sudo service mongod restart
+
+mongo --host 127.0.0.1:27017
+
+use admin
+
+db.auth("rdbagwe", "rdbagwe123")
+
+
+=====
+use hotels_test
+
+db.createUser(
+  {
+   user: "rdbagwe",
+   pwd: "rdbagwe123",
+   roles: [ "readWrite"]
+  })
+
+============
+Again restart
+
+> use hotels_test
+switched to db hotels_test
+> 
+> 
+> db.auth("rdbagwe", "rdbagwe123")
+1
+
+============
+mongo --port 27017 -u "rdbagwe" -p "rdbagwe123" --authenticationDatabase "hotels_test"
+
+
+> db.getUser("rdbagwe")
+{
+	"_id" : "hotels_test.rdbagwe",
+	"user" : "rdbagwe",
+	"db" : "hotels_test",
+	"roles" : [
+		{
+			"role" : "readWrite",
+			"db" : "hotels_test"	
+		}
+	],
+	"mechanisms" : [
+		"SCRAM-SHA-1",
+		"SCRAM-SHA-256"
+	]
+}
+
+
+db.grantRolesToUser("rdbagwe",["userAdminAnyDatabase"])
+
+
+CRUD:
+
+# to log all operations happening on the shell 
+db.setProfilingLevel(2)
+
+
+
+MongoDB use DATABASE_NAME is used to create database. The command will create a new database if it doesn't exist, otherwise it will return the existing database.
+
+
+Create or insert operations add new documents to a collection. If the collection does not currently exist, insert operations will create the collection.
+
+
+#auto increment
+
+there is no direct database sequence command present in the MongoDB as compared to the various relational databases but auto increment sequences of variable step sizes can be formulated with the help of the counter collection and the JavaScript function where we increment the sequence value specified in the counter collection.
+
+https://blog.eduonix.com/web-programming-tutorials/learn-auto-increment-sequences-mongodb/
+
+
+
+
+insert
+
+
+db.inventory.insertOne(
+   { item: "canvas", qty: 100, tags: ["cotton"], size: { h: 28, w: 35.5, uom: "cm" } }
+)
+
+# If the document does not specify an _id field, MongoDB adds the _id field with an ObjectId value to the new document
+
+db.inventory.insertMany( [
+   { item: "canvas", qty: 100, size: { h: 28, w: 35.5, uom: "cm" }, status: "A" },
+   { item: "journal", qty: 25, size: { h: 14, w: 21, uom: "cm" }, status: "A" },
+   { item: "mat", qty: 85, size: { h: 27.9, w: 35.5, uom: "cm" }, status: "A" },
+   { item: "mousepad", qty: 25, size: { h: 19, w: 22.85, uom: "cm" }, status: "P" },
+   { item: "notebook", qty: 50, size: { h: 8.5, w: 11, uom: "in" }, status: "P" },
+   { item: "paper", qty: 100, size: { h: 8.5, w: 11, uom: "in" }, status: "D" },
+   { item: "planner", qty: 75, size: { h: 22.85, w: 30, uom: "cm" }, status: "D" },
+   { item: "postcard", qty: 45, size: { h: 10, w: 15.25, uom: "cm" }, status: "A" },
+   { item: "sketchbook", qty: 80, size: { h: 14, w: 21, uom: "cm" }, status: "A" },
+   { item: "sketch pad", qty: 95, size: { h: 22.85, w: 30.5, uom: "cm" }, status: "A" }
+] );
+
+
+
+db.collection.save()
+#Updates an existing document or inserts a new document, depending on its document parameter.
+
+db.inventory.insertOne({ item: "rohan", qty:7, tags: ["yasha,ballal"], size: { h: 28, w: 35.5, uom: "love" } } )
+
+db.inventory.save({ item: "yasha", qty:7, tags: ["rohan,bagwe"], size: { h: 28, w: 35.5, uom: "hate" } } )
+
+db.inventory.save({ item: "yasha", qty:7, tags: ["rohanbagwe", "not even my friend"], size: { h: 28, w: 35.5, uom: "hate" } } )
+
+
+# The save() method uses either the insert or the update command,
+
+# If the document does not contain an _id field, then the save() method calls the insert() method.
+
+#If the document contains an _id field, then the save() method is equivalent to an update with the upsert option set to true
+
+upsert option true means if _id is not present it will create a new record and insert.
+
+
+Projection
+
+You can remove the _id field from the results by setting its exclusion <field> to 0 in the projection,
+
+
+
+db.inventory.find( { status: "A" }, { item: 1, status: 1, _id: 0 } )
+
+
+by default id is included in the result
+
+
+db.inventory.find( { status: { $in: [ "A", "D" ] } } )
+
+
+db.inventory.find( { status: "A", qty: { $lt: 30 } } )
+# status A and qty less than 30
+
+db.inventory.find( {
+     status: "A",
+     $or: [ { qty: { $lt: 30 } }, { item: /^p/ } ]
+} )
+
+
+SELECT * FROM inventory WHERE status = "A" AND ( qty < 30 OR item LIKE "p%")
+
+
+
+db.inventory.find( { item: null } )
+# item field whose value is null or that do not contain the item field.
+
+
+db.inventory.insertOne({ item: "rohan", qty:7, tags: ["yashaballal","going usa"], lastmodified: new Date() ,size: { h: 28, w: 35.5, uom: "love" } } )
+
+
+db.inventory.find(ObjectId('5b45e0638c291e94f1a481e3'))
+
+> db.inventory.find(ObjectId("5b45e0638c291e94f1a481e3"))
+{ "_id" : ObjectId("5b45e0638c291e94f1a481e3"), "item" : "yasha rohan ballal", "qty" : 7, "tags" : [ "yashaballal", "going usa" ], "lastmodified" : ISODate("2018-07-11T10:48:03.618Z"), "size" : { "h" : 28, "w" : 35.5, "uom" : "love" } }
+
+
+db.inventory.updateOne(
+   { item: "yasha rohan ballal" },
+   {
+     $set: { "size.uom": "cm", status: "updated" },
+     $currentDate: { lastModified: true }
+   }
+)
+
+
+{ "acknowledged" : true, "matchedCount" : 1, "modifiedCount" : 1 }
+> 
+> 
+> 
+> db.inventory.find(ObjectId("5b45e0638c291e94f1a481e3"))
+{ "_id" : ObjectId("5b45e0638c291e94f1a481e3"), "item" : "yasha rohan ballal", "qty" : 7, "tags" : [ "yashaballal", "going usa" ], "lastmodified" : ISODate("2018-07-11T10:48:03.618Z"), "size" : { "h" : 28, "w" : 35.5, "uom" : "cm" }, "lastModified" : ISODate("2018-07-11T10:49:36.848Z"), "status" : "updated" }
+
+#
+If updateOne(), updateMany(), or replaceOne() includes upsert : true and no documents match the specified filter, then the operation creates a new document and inserts it.
+
+
+To replace the entire content of a document except for the _id field, pass an entirely new document as the second argument to db.collection.replaceOne().
+
+In the replacement document, you can omit the _id field since the _id field is immutable4
+
+
+db.inventory.replaceOne(
+   { item: "yasha rohan ballal" },
+   { item: "paper", instock: [ { warehouse: "A", qty: 60 }, { warehouse: "B", qty: 40 } ] }
+)
+
+entire document is changed
+
+> db.inventory.replaceOne(
+...    { item: "yasha rohan ballal" },
+...    { item: "paper", instock: [ { warehouse: "A", qty: 60 }, { warehouse: "B", qty: 40 } ] }
+... )
+{ "acknowledged" : true, "matchedCount" : 1, "modifiedCount" : 1 }
+> 
+> 
+> 
+> db.inventory.find(ObjectId("5b45e0638c291e94f1a481e3"))
+{ "_id" : ObjectId("5b45e0638c291e94f1a481e3"), "item" : "paper", "instock" : [ { "warehouse" : "A", "qty" : 60 }, { "warehouse" : "B", "qty" : 40 } ] }
+
+
+
+db.collection.updateMany(
+   <filter>,
+   <update>,
+   {
+     upsert: <boolean>,
+     writeConcern: <document>,
+     collation: <document>,
+     arrayFilters: [ <filterdocument1>, ... ]
+   }
+)
+# updates all documents 
+
+try {
+   db.inventory.deleteOne( { "_id" : ObjectId("563237a41a4d68582c2509da") } );
+} catch (e) {
+   print(e);
+}
+
+
+db.inventory.deleteOne({item:"sketchpad"})
+
+ db.inventory.deleteMany({item:"canvas"})
+
+> db.inventory.count()
+16
+
+#create new collection
+
+
+> db.new_inventory
+hotels_test.new_inventory
+
+
+
+db.inventory.copyTo(new_inventory)
+
+> db.inventory.createIndex({item:1})
+
+
+db.inventory.createIndex( { "item": 1 }, { unique: true } )
+
+> db.inventory.createIndex( { "item": 1 }, { unique: true } )
+{
+	"createdCollectionAutomatically" : false,
+	"numIndexesBefore" : 2,
+	"numIndexesAfter" : 2,
+	"note" : "all indexes already exist",
+	"ok" : 1
+}
+> db.inventory.find({})
+{ "_id" : ObjectId("5b45e5df304f8f37d58b4acb"), "item" : "canvas", "qty" : 100, "size" : { "h" : 28, "w" : 35.5, "uom" : "cm" }, "status" : "A" }
+{ "_id" : ObjectId("5b45e5df304f8f37d58b4acc"), "item" : "journal", "qty" : 25, "size" : { "h" : 14, "w" : 21, "uom" : "cm" }, "status" : "A" }
+{ "_id" : ObjectId("5b45e5df304f8f37d58b4acd"), "item" : "mat", "qty" : 85, "size" : { "h" : 27.9, "w" : 35.5, "uom" : "cm" }, "status" : "A" }
+{ "_id" : ObjectId("5b45e5df304f8f37d58b4ace"), "item" : "mousepad", "qty" : 25, "size" : { "h" : 19, "w" : 22.85, "uom" : "cm" }, "status" : "P" }
+{ "_id" : ObjectId("5b45e5df304f8f37d58b4acf"), "item" : "notebook", "qty" : 50, "size" : { "h" : 8.5, "w" : 11, "uom" : "in" }, "status" : "P" }
+{ "_id" : ObjectId("5b45e5df304f8f37d58b4ad0"), "item" : "paper", "qty" : 100, "size" : { "h" : 8.5, "w" : 11, "uom" : "in" }, "status" : "D" }
+{ "_id" : ObjectId("5b45e5df304f8f37d58b4ad1"), "item" : "planner", "qty" : 75, "size" : { "h" : 22.85, "w" : 30, "uom" : "cm" }, "status" : "D" }
+{ "_id" : ObjectId("5b45e5df304f8f37d58b4ad2"), "item" : "postcard", "qty" : 45, "size" : { "h" : 10, "w" : 15.25, "uom" : "cm" }, "status" : "A" }
+{ "_id" : ObjectId("5b45e5df304f8f37d58b4ad3"), "item" : "sketchbook", "qty" : 80, "size" : { "h" : 14, "w" : 21, "uom" : "cm" }, "status" : "A" }
+{ "_id" : ObjectId("5b45e5df304f8f37d58b4ad4"), "item" : "sketch pad", "qty" : 95, "size" : { "h" : 22.85, "w" : 30.5, "uom" : "cm" }, "status" : "A" }
+
+
+> db.inventory.insertOne({ item: "canvas"})
+
+2018-07-11T16:42:33.789+0530 E QUERY    [js] WriteError: E11000 duplicate key error collection: hotel_test.inventory index: item_1 dup key: { : "canvas" } :
+WriteError({
+	"index" : 0,
+	"code" : 11000,
+	"errmsg" : "E11000 duplicate key error collection: hotel_test.inventory index: item_1 dup key: { : \"canvas\" }",
+	"op" : {
+		"_id" : ObjectId("5b45e621304f8f37d58b4ad5"),
+		"item" : "canvas"
+	}
+})
+WriteError@src/mongo/shell/bulk_api.js:461:48
+Bulk/mergeBatchResults@src/mongo/shell/bulk_api.js:841:49
+Bulk/executeBatch@src/mongo/shell/bulk_api.js:906:13
+Bulk/this.execute@src/mongo/shell/bulk_api.js:1150:21
+DBCollection.prototype.insertOne@src/mongo/shell/crud_api.js:252:9
+@(shell):1:1
+
+> db.inventory.insertOne({ item: "canvas1"})
+{
+	"acknowledged" : true,
+	"insertedId" : ObjectId("5b45e67d304f8f37d58b4ad6")
+}
+
+this allows as it doesnt violate the unique index constraint
+
+> db.inventory.getIndexes()
+[
+	{
+		"v" : 2,
+		"key" : {
+			"_id" : 1
+		},
+		"name" : "_id_",
+		"ns" : "hotel_test.inventory"
+	},
+	{
+		"v" : 2,
+		"unique" : true,
+		"key" : {
+			"item" : 1
+		},
+		"name" : "item_1",
+		"ns" : "hotel_test.inventory"
+	}
+]
+
+
+by default the index in on id field
+
+
+if there are duplicate valurs presnt in the coulmn then you can not create the index
+
+> db.inventory.distinct("item")
+[
+	"canvas",
+	"journal",
+	"mat",
+	"mousepad",
+	"notebook",
+	"paper",
+	"planner",
+	"postcard",
+	"sketchbook",
+	"sketch pad",
+	"canvas1"
+]
+
+db.inventory.distinct('coulmnname')
+
+Syntax is pretty much easier, aggregate function takes an array as argument, in array we can pass various phases/stages of pipeline.
+
+
+
+Stages of Pipeline
+$project phase
+
+
+mongoimport -u=rdbagwe -p=rdbagwe123 --db hotels_test --collection website --file website.json
+
+
+dept = ['IT', 'Sales', 'HR', 'Admin'];
+for (i = 0; i < 10; i++) {
+    
+    db.mycollection.insert({ //mycollection is collection name
+        '_id': i,
+        'emp_code': 'emp_' + i,
+        'dept_name': dept[Math.round(Math.random() * 3)],
+        'experience': Math.round(Math.random() * 10),
+
+    })};
+
+
+> db.mycollection.find({})
+{ "_id" : 0, "emp_code" : "emp_0", "dept_name" : "HR", "experience" : 7 }
+{ "_id" : 1, "emp_code" : "emp_1", "dept_name" : "HR", "experience" : 5 }
+{ "_id" : 2, "emp_code" : "emp_2", "dept_name" : "Sales", "experience" : 6 }
+{ "_id" : 3, "emp_code" : "emp_3", "dept_name" : "HR", "experience" : 1 }
+{ "_id" : 4, "emp_code" : "emp_4", "dept_name" : "HR", "experience" : 8 }
+{ "_id" : 5, "emp_code" : "emp_5", "dept_name" : "IT", "experience" : 9 }
+{ "_id" : 6, "emp_code" : "emp_6", "dept_name" : "Admin", "experience" : 10 }
+{ "_id" : 7, "emp_code" : "emp_7", "dept_name" : "HR", "experience" : 3 }
+{ "_id" : 8, "emp_code" : "emp_8", "dept_name" : "HR", "experience" : 4 }
+{ "_id" : 9, "emp_code" : "emp_9", "dept_name" : "Sales", "experience" : 2 }
+> 
+
+
+db.mycollection.aggregate([
+    {
+        $project:{
+            _id:0,
+            'department':{$toUpper:'$dept_name'},
+            'new_experience':{$add:['$experience',1]}
+        }
+    }
+])
+
+'''
+_id:0 means _id which is compulsory we are hiding this field
+ new key named department is created using previous dept_name field in upper case. 
+ ‘dept_name’ is prefixed with ‘$’ sign to tell mongo shell that this field is the original field name of the document
+
+
+'''
+{ "department" : "HR", "new_experience" : 8 }
+{ "department" : "HR", "new_experience" : 6 }
+{ "department" : "SALES", "new_experience" : 7 }
+{ "department" : "HR", "new_experience" : 2 }
+{ "department" : "HR", "new_experience" : 9 }
+{ "department" : "IT", "new_experience" : 10 }
+{ "department" : "ADMIN", "new_experience" : 11 }
+{ "department" : "HR", "new_experience" : 4 }
+{ "department" : "HR", "new_experience" : 5 }
+{ "department" : "SALES", "new_experience" : 3 }
+
+
+
+$match
+
+match first and then project flow is like this
+
+db.mycollection.aggregate([
+    {
+	$match:{
+            dept_name:'Sales'
+        }
+
+    },
+    {
+        $project:{
+            _id:0,
+            'department':{$toUpper:'$dept_name'},
+            'new_experience':{$add:['$experience',1]}
+        }
+    }
+])
+ 
+
+db.mycollection.aggregate([
+    {
+	$match:{
+            dept_name:'Sales'
+        }
+
+    }
+])
+ 
+
+$group
+
+
+db.mycollection.aggregate([
+    {
+        $group:{
+            _id:'$dept_name',
+            no_of_employees:{$sum:1}
+        }
+    }
+])
+Here, _id is the key for grouping and I have created new key named no_of_employees and used $sum to find the total record in each group.
+
+Let’s say we want to group documents on more than on key,
+
+db.mycollection.aggregate([
+    {
+        $group:{
+            _id:{'department':'$dept_name',
+                'year_of_experience':'$experience'
+            },
+            no_of_employees:{$sum:1}
+        }
+    }
+])
+
+4. $sort
+
+db.mycollection.aggregate([
+    {
+        $group:{
+            _id:'$dept_name',
+            no_of_employees:{$sum:1}
+        }
+    },
+    {
+        $sort:{
+            _id:1
+        }
+    },
+    {
+        $skip:2
+    },
+    {
+        $limit:1
+    }
+
+])
+For descending use -1. Here in $sort, I have used _id field because in the first phase of aggregation, I used $dept_name as _id for aggregation.
+
+
+
+$Sum: We have already seen its example.
+$avg: Average works just like sum except it calculates the average for each group.
+$min: Finds out the minimum value from each grouped document.
+$max: Finds out the maximum value from each grouped document.
+
+
+$lookup works as join
+
+db.Country.insert({"_id":1,"Name":"India"})
+db.Country.insert({"_id":2,"Name":"US"})
+db.Country.insert({"_id":3,"Name":"UK"})
+db.Country.insert({"_id":4,"Name":"Australia"})
+
+db.City.insert({"_id":1,"Name":"Delhi","CountryID":1})
+db.City.insert({"_id":2,"Name":"Noida","CountryID":1})
+db.City.insert({"_id":3,"Name":"Chicago","CountryID":2})
+db.City.insert({"_id":4,"Name":"London","CountryID":3})
+db.City.insert({"_id":5,"Name":"Bristol","CountryID":3})
+db.City.insert({"_id":6,"Name":"Sydney","CountryID":4})
+
+
+db.City.aggregate([
+    {
+
+      $project:
+              {
+		_id: 0,
+		name: 1,
+		CountryID:1
+              }
+     },
+     { 
+     $lookup:
+        {
+          from: "Country",
+          localField: "CountryID",
+          foreignField: "_id",
+          as: "Country Common"
+        }
+   }
+])
+
+
+{ "CountryID" : 1, "Country Common" : [ { "_id" : 1, "Name" : "India" } ] }
+{ "CountryID" : 1, "Country Common" : [ { "_id" : 1, "Name" : "India" } ] }
+{ "CountryID" : 2, "Country Common" : [ { "_id" : 2, "Name" : "US" } ] }
+{ "CountryID" : 3, "Country Common" : [ { "_id" : 3, "Name" : "UK" } ] }
+{ "CountryID" : 3, "Country Common" : [ { "_id" : 3, "Name" : "UK" } ] }
+{ "CountryID" : 4, "Country Common" : [ { "_id" : 4, "Name" : "Australia" } ] }
+
+
+
+
+https://www.codeproject.com/Articles/1096142/MongoDB-Tutorial-Day-Aggregation
+
